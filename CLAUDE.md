@@ -55,7 +55,7 @@ behind it.
 
 ## Deploy
 
-Push-to-`main` deploys via `.github/workflows/deploy.yml` (denoland/deploy-action,
+Push-to-`main` deploys via `.github/workflows/deploy.yml` (denoland/deploy_action,
 `DENO_DEPLOY_TOKEN` repo secret, org `paulkinlan-ea`, app `well-known-showcase`, entrypoint
 `server.ts`). The org token has no linked GitHub identity, so the native GitHub integration isn't
 attached; if Paul attaches it in the console, disable the Actions workflow to avoid two deploy

@@ -39,7 +39,7 @@
 ## Deploy
 
 Production deploys happen on pushes to `main` via the GitHub Actions pipeline
-(`.github/workflows/deploy.yml`, `denoland/deploy-action@v2`), which uploads with the org token from
+(`.github/workflows/deploy.yml`, `denoland/deploy_action@v2`), which uploads with the org token from
 the `DENO_DEPLOY_TOKEN` repo secret (org `paulkinlan-ea`, app `well-known-showcase`, entrypoint
 `server.ts`).
 

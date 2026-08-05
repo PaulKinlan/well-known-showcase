@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Deploy to Deno Deploy
-        uses: denoland/deploy-action@v2
+        uses: denoland/deploy_action@v2
         with:
           project: well-known-showcase
           entrypoint: server.ts
