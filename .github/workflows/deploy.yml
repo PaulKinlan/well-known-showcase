@@ -1,10 +1,15 @@
 # Deploys well-known-showcase to Deno Deploy on every push to main.
 #
-# The org access token (DENO_DEPLOY_TOKEN secret, org paulkinlan-ea) has no
-# linked GitHub identity, so the native "GitHub integration" can't be attached
-# from here — this Actions pipeline is the push-to-main deploy path. If Paul
-# attaches the repo in the Deploy console later, disable this workflow to avoid
-# two deploy mechanisms shadowing each other.
+# The org access token (DENO_DEPLOY_TOKEN repo secret, org paulkinlan-ea) has
+# no linked GitHub identity, so the OIDC-only denoland/deployctl@v1 action
+# cannot authenticate here (it requires the repo to be connected to Deno Deploy
+# via the GitHub integration in the console). Instead we run the `deno deploy`
+# CLI directly in CI with the token from the secret — same command verified
+# manually on 2026-08-05 (production revision 9t6k7t17p858).
+#
+# If Paul attaches the repo in the Deploy console later, keep exactly ONE
+# deploy mechanism — two mechanisms on one app shadow each other (last deploy
+# wins).
 
 name: deploy
 
@@ -21,9 +26,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy to Deno Deploy
-        uses: denoland/deployctl@v1
+      - uses: denoland/setup-deno@v2
         with:
-          project: well-known-showcase
-          entrypoint: server.ts
-          deploy_token: ${{ secrets.DENO_DEPLOY_TOKEN }}
+          deno-version: v2
+
+      - name: Deploy to Deno Deploy
+        run: deno deploy --json --non-interactive --org=paulkinlan-ea --app=well-known-showcase --prod .
+        env:
+          DENO_DEPLOY_TOKEN: ${{ secrets.DENO_DEPLOY_TOKEN }}
