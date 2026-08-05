@@ -1,0 +1,26 @@
+{
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1.0.19"
+  },
+  "tasks": {
+    "serve": "deno run --allow-net --allow-env=PORT,HOST --allow-read=public server.ts",
+    "test": "deno test --allow-net=127.0.0.1 --allow-env --allow-run --allow-read=public,lib,server.ts tests/",
+    "check": "deno check server.ts lib/*.ts tests/*.ts",
+    "fmt": "deno fmt",
+    "gate": "deno fmt --check && deno lint && deno task check && deno task test"
+  },
+  "fmt": {
+    "lineWidth": 100,
+    "exclude": [
+      "public/styles.css"
+    ]
+  },
+  "deploy": {
+    "org": "paulkinlan-ea",
+    "app": "well-known-showcase",
+    "runtime": {
+      "type": "dynamic",
+      "entrypoint": "server.ts"
+    }
+  }
+}
