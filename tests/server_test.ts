@@ -246,3 +246,84 @@ Deno.test("demo endpoints are labelled and 404 unknown paths honestly", async ()
     await child.status;
   }
 });
+
+Deno.test("upgraded reference specs serve format-valid demo endpoints", async () => {
+  const child = await startServer();
+  try {
+    const cases: Array<{ path: string; type: RegExp; check: (body: string) => boolean }> = [
+      {
+        path: "/.well-known/uma2-configuration",
+        type: /json/,
+        check: (b) => b.includes("permission_endpoint") && b.includes("_demo_note"),
+      },
+      {
+        path: "/.well-known/openid-federation",
+        type: /json/,
+        check: (b) => b.includes('"iss":') && b.includes("jwks") && b.includes("_demo_note"),
+      },
+      {
+        path: "/.well-known/gnap-as-rs",
+        type: /json/,
+        check: (b) => b.includes("grant_request_endpoint") && b.includes("_demo_note"),
+      },
+      {
+        path: "/.well-known/idp-proxy",
+        type: /json/,
+        check: (b) => b.includes('"services"') && b.includes("_demo_note"),
+      },
+      {
+        path: "/.well-known/related-website-set.json",
+        type: /json/,
+        check: (b) => b.includes("associatedSites") && b.includes("_demo_note"),
+      },
+      {
+        path: "/.well-known/privacy-sandbox-attestations.json",
+        type: /json/,
+        check: (b) => b.trim().startsWith("[") && b.includes("attestation"),
+      },
+      {
+        path: "/.well-known/resourcesync",
+        type: /xml/,
+        check: (b) => b.includes("<urlset") && b.includes("openarchives.org/rs/terms"),
+      },
+      {
+        path: "/.well-known/csvm",
+        type: /json/,
+        check: (b) => b.includes("csvw") && b.includes("tableSchema"),
+      },
+      {
+        path: "/.well-known/void",
+        type: /turtle/,
+        check: (b) => b.includes("void:Dataset") && b.includes("@prefix"),
+      },
+      {
+        path: "/.well-known/scitt-keys",
+        type: /json/,
+        check: (b) => b.includes('"keys"') && b.includes('"crv"'),
+      },
+      {
+        path: "/.well-known/webweaver.json",
+        type: /json/,
+        check: (b) => b.includes("WebWeaver") && b.includes("_demo_note"),
+      },
+      {
+        path: "/.well-known/dnt-policy.txt",
+        type: /text\/plain/,
+        check: (b) => b.includes("Demo DNT policy"),
+      },
+    ];
+    for (const c of cases) {
+      const res = await fetch(`${BASE}${c.path}`);
+      assertEquals(res.status, 200, `${c.path} should return 200`);
+      assertMatch(res.headers.get("content-type") ?? "", c.type, `${c.path} content type`);
+      const body = await res.text();
+      assert(
+        c.check(body),
+        `${c.path} body should be format-valid and honest: ${body.slice(0, 120)}`,
+      );
+    }
+  } finally {
+    child.kill();
+    await child.status;
+  }
+});

@@ -712,8 +712,8 @@ export const SPECS: Spec[] = [
       "Each entity serves its federation statement (JWT with iss/sub, metadata, authority_hints) at /.well-known/openid-federation.",
       "Relying parties resolve the trust chain from entity to trust anchor, verifying signatures at each hop.",
     ],
-    demoKind: "reference",
-    demoLabel: "Reference only — not served",
+    demoKind: "demo",
+    demoLabel: "Demo — entity statement with this host's real demo JWK; nothing federates",
   },
   {
     slug: "uma2-configuration",
@@ -735,8 +735,8 @@ export const SPECS: Spec[] = [
       "The document lists permission_endpoint, token_endpoint, introspection_endpoint, and the UMA grant flow endpoints.",
       "All parties use the same published metadata, avoiding drift.",
     ],
-    demoKind: "reference",
-    demoLabel: "Reference only — not served",
+    demoKind: "demo",
+    demoLabel: "Demo — format-valid UMA 2.0 metadata; no UMA endpoints run here",
   },
   {
     slug: "idp-proxy",
@@ -756,8 +756,9 @@ export const SPECS: Spec[] = [
       "A WebRTC client looks up /.well-known/idp-proxy on the peer's domain to find the identity provider.",
       "The proxy issues identity assertions bound to the peer's DTLS fingerprint.",
     ],
-    demoKind: "reference",
-    demoLabel: "Reference only — not served",
+    demoKind: "demo",
+    demoLabel:
+      "Demo — format-valid RFC 8827 identity-proxy config; no WebRTC identity service runs here",
   },
   {
     slug: "gnap-as-rs",
@@ -778,8 +779,8 @@ export const SPECS: Spec[] = [
       "The AS publishes /.well-known/gnap-as-rs describing its token endpoint and signing keys.",
       "Resource servers use it to validate tokens issued under GNAP.",
     ],
-    demoKind: "reference",
-    demoLabel: "Reference only — not served",
+    demoKind: "demo",
+    demoLabel: "Demo — format-valid GNAP AS metadata (RFC 9767); no GNAP endpoints run here",
   },
 
   // --------------------------------------------------------------- platform
@@ -898,9 +899,11 @@ export const SPECS: Spec[] = [
       "Chrome fetched and validated the declaration before applying relaxed cookie rules within the set.",
       "Google deprecated the mechanism in April 2026 — an example of a well-known URI that lived and died with a platform transition.",
     ],
-    notes: ["Reference only — the mechanism is deprecated and Chrome no longer reads this file."],
-    demoKind: "reference",
-    demoLabel: "Reference only — deprecated April 2026, not served",
+    notes: [
+      "Format demo of the deprecated mechanism. Chrome stopped reading this file in April 2026; the example member domains are placeholders.",
+    ],
+    demoKind: "demo",
+    demoLabel: "Format demo — mechanism deprecated April 2026; Chrome no longer reads this file",
   },
 
   // ------------------------------------------------------------------ email
@@ -1020,8 +1023,8 @@ export const SPECS: Spec[] = [
       "Chrome verified the file against the enrolled account before allowing the APIs.",
       "Deprecated 2026-04-01 — a snapshot of how platform policy evolves.",
     ],
-    demoKind: "reference",
-    demoLabel: "Reference only — deprecated, not served",
+    demoKind: "demo",
+    demoLabel: "Format demo of the deprecated attestations file — not a real attestation set",
   },
 
   // --------------------------------------------------------------- discovery
@@ -1203,8 +1206,8 @@ export const SPECS: Spec[] = [
       "A repository serves /.well-known/resourcesync pointing to its capability list.",
       "Harvesters follow the document graph (capability list → resource list / change list) to sync only what changed.",
     ],
-    demoKind: "reference",
-    demoLabel: "Reference only — not served",
+    demoKind: "demo",
+    demoLabel: "Demo — format-valid ResourceSync capability list (XML)",
   },
   {
     slug: "csvm",
@@ -1225,8 +1228,8 @@ export const SPECS: Spec[] = [
       "A site serves /.well-known/csvm with metadata templates for its CSV files.",
       "Consumers (or the CSVW annotation process) match table files to their metadata and interpret columns correctly.",
     ],
-    demoKind: "reference",
-    demoLabel: "Reference only — not served",
+    demoKind: "demo",
+    demoLabel: "Demo — format-valid CSV on the Web metadata",
   },
   {
     slug: "void",
@@ -1246,8 +1249,8 @@ export const SPECS: Spec[] = [
       "A data publisher serves /.well-known/void describing its datasets in RDF.",
       "Consumers use the vocabulary (void:Dataset, void:subset, void:triples) to understand and query the data.",
     ],
-    demoKind: "reference",
-    demoLabel: "Reference only — not served",
+    demoKind: "demo",
+    demoLabel: "Demo — format-valid VoID description (text/turtle)",
   },
 
   // ----------------------------------------------------------------- agents
@@ -1342,8 +1345,8 @@ export const SPECS: Spec[] = [
       "A transparency service serves /.well-known/scitt-keys with its key material.",
       "Clients verify SCITT statements against these keys before trusting them.",
     ],
-    demoKind: "reference",
-    demoLabel: "Reference only — not served",
+    demoKind: "demo",
+    demoLabel: "Demo — key list with this host's real demo JWK; no transparency service runs here",
   },
   {
     slug: "webweaver-json",
@@ -1362,8 +1365,8 @@ export const SPECS: Spec[] = [
     how: [
       "The platform serves /.well-known/webweaver.json describing its API endpoints for webweaver integration.",
     ],
-    demoKind: "reference",
-    demoLabel: "Reference only — not served",
+    demoKind: "demo",
+    demoLabel: "Demo — format-valid webweaver registry entry",
   },
 
   // ------------------------------------------------------------------ misc
@@ -1496,8 +1499,8 @@ export const SPECS: Spec[] = [
     threat:
       "A DNT promise is only meaningful if it's tied to a specific, inspectable policy — this URI makes the commitment explicit.",
     how: ["The site serves the URL of the EFF policy it adopts."],
-    demoKind: "reference",
-    demoLabel: "Reference only — not served",
+    demoKind: "demo",
+    demoLabel: "Demo policy text — this site does not claim to honor DNT",
   },
 ];
 

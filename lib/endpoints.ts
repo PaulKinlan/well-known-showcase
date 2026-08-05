@@ -657,6 +657,142 @@ const hostingProvider: Handler = () =>
 const fundingManifestUrls: Handler = (_req, { origin }) =>
   json({ funding_manifest_urls: [`${origin}/funding.json`] });
 
+// ---- reference-to-demo upgrades (format-valid, honest, no real infra) ----
+
+const uma2Configuration: Handler = (_req, { origin, host }) =>
+  json({
+    issuer: origin,
+    authorization_endpoint: `${origin}/demo/uma/authorize`,
+    token_endpoint: `${origin}/demo/uma/token`,
+    permission_endpoint: `${origin}/demo/uma/permission`,
+    introspection_endpoint: `${origin}/demo/uma/introspect`,
+    resource_registration_endpoint: `${origin}/demo/uma/resource`,
+    rpt_endpoints: [`${origin}/demo/uma/rpt`],
+    grant_types_supported: [
+      "authorization_code",
+      "urn:ietf:params:oauth:grant-type:uma-ticket",
+    ],
+    token_endpoint_auth_methods_supported: ["client_secret_basic"],
+    _demo_note:
+      `Illustrative UMA 2.0 authorization-server metadata for ${host}. No UMA endpoints actually run here.`,
+  });
+
+const openidFederation: Handler = (_req, { origin, host, keys }) => {
+  const now = Math.floor(Date.now() / 1000);
+  return json({
+    iss: origin,
+    sub: origin,
+    iat: now,
+    exp: now + 86400,
+    jwks: { keys: [keys.publicJwk] },
+    metadata: {
+      federation_entity: { organization_name: "well-known-showcase (demo)" },
+    },
+    authority_hints: [],
+    _demo_note:
+      `Illustrative OpenID Federation 1.0 entity statement for ${host}. The embedded JWK is this host's real demo key; nothing federates here.`,
+  });
+};
+
+const gnapAsRs: Handler = (_req, { origin, host }) =>
+  json({
+    issuer: origin,
+    authorization_endpoint: `${origin}/demo/gnap/authorize`,
+    token_endpoint: `${origin}/demo/gnap/token`,
+    grant_request_endpoint: `${origin}/demo/gnap/grant-request`,
+    _demo_note:
+      `Illustrative GNAP authorization-server metadata (RFC 9767) for ${host}. No GNAP endpoints actually run here.`,
+  });
+
+const idpProxy: Handler = (_req, { origin, host }) =>
+  json({
+    services: [
+      { type: "domain", domain: host, uri: `${origin}/demo/webrtc-idp/` },
+      { type: "generic", uri: `${origin}/demo/webrtc-idp/` },
+    ],
+    _demo_note:
+      "Illustrative RFC 8827 WebRTC identity-proxy configuration. No identity assertion service runs here.",
+  });
+
+const relatedWebsiteSetJson: Handler = (_req, { origin }) =>
+  json({
+    primary: origin,
+    associatedSites: ["https://member1.example", "https://member2.example"],
+    serviceSites: [],
+    _demo_note:
+      "Format demo of a Related Website Set declaration. The mechanism was deprecated by Google in April 2026 and Chrome no longer reads this file; member domains are placeholders.",
+  });
+
+const privacySandboxAttestations: Handler = () =>
+  json([
+    "https://example.com/attestation/demo-attestation-1.json",
+  ]);
+
+const resourcesync: Handler = (_req, { origin }) =>
+  new Response(
+    '<?xml version="1.0" encoding="UTF-8"?>\n' +
+      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" ' +
+      'xmlns:rs="http://www.openarchives.org/rs/terms/">\n' +
+      `  <rs:ln rel="describedby" href="${origin}/demo/resourcesync/describedby.xml"/>\n` +
+      `  <rs:ln rel="capability" href="${origin}/demo/resourcesync/capability-list.xml"/>\n` +
+      "  <url>\n" +
+      `    <loc>${origin}/</loc>\n` +
+      "  </url>\n" +
+      "</urlset>\n",
+    { headers: { "content-type": "application/xml; charset=utf-8" } },
+  );
+
+const csvm: Handler = (_req, { origin }) =>
+  json({
+    "@context": ["http://www.w3.org/ns/csvw", { "@language": "en" }],
+    "@id": `${origin}/demo/csvw/well-known-metadata.json`,
+    url: `${origin}/demo/csvw/well-known.csv`,
+    tableSchema: {
+      columns: [
+        { name: "spec", titles: "Well-known URI", datatype: "string" },
+        { name: "status", titles: "Status", datatype: "string" },
+      ],
+    },
+    _demo_note:
+      "Illustrative CSV on the Web (W3C) metadata description. No CSV file is actually served at the demo URL.",
+  });
+
+const voidDemo: Handler = (_req, { origin, host }) =>
+  new Response(
+    "@prefix void: <http://rdfs.org/ns/void#> .\n" +
+      "@prefix dcterms: <http://purl.org/dc/terms/> .\n" +
+      `  <${origin}/demo/void/dataset> a void:Dataset ;\n` +
+      `    dcterms:title "well-known-showcase demo dataset" ;\n` +
+      `    dcterms:description "Illustrative VoID description for ${host}" ;\n` +
+      `    void:uriLookupEndpoint "${origin}/demo/void/lookup" .\n`,
+    { headers: { "content-type": "text/turtle; charset=utf-8" } },
+  );
+
+const scittKeys: Handler = (_req, { keys }) =>
+  json({
+    keys: [keys.publicJwk],
+    _demo_note:
+      "Illustrative SCITT transparency-service key list (RFC 9943). The embedded JWK is this host's real demo key; no transparency service runs here.",
+  });
+
+const webweaverJson: Handler = (_req, { origin }) =>
+  json({
+    id: origin,
+    type: "WebWeaver",
+    title: "well-known-showcase (demo)",
+    endpoint: `${origin}/demo/webweaver/`,
+    _demo_note:
+      "Illustrative webweaver federation-registry entry. No school-platform service actually runs here.",
+  });
+
+const dntPolicyTxt: Handler = () =>
+  text(
+    "Demo DNT policy (EFF DNT Policy template, abridged).\n" +
+      "This is a format demonstration; this site does not claim to honor DNT.\n" +
+      "Real deployments host their committed policy text here.\n",
+    "text/plain; charset=utf-8",
+  );
+
 const pkiValidation: Handler = (req, _ctx) => {
   const url = new URL(req.url);
   const file = url.pathname.split("/").pop() ?? "";
@@ -761,6 +897,18 @@ export const ENDPOINTS: Record<string, Handler> = {
   "trust.txt": trustTxt,
   "hosting-provider": hostingProvider,
   "funding-manifest-urls": fundingManifestUrls,
+  "uma2-configuration": uma2Configuration,
+  "openid-federation": openidFederation,
+  "gnap-as-rs": gnapAsRs,
+  "idp-proxy": idpProxy,
+  "related-website-set.json": relatedWebsiteSetJson,
+  "privacy-sandbox-attestations.json": privacySandboxAttestations,
+  "resourcesync": resourcesync,
+  "csvm": csvm,
+  "void": voidDemo,
+  "scitt-keys": scittKeys,
+  "webweaver.json": webweaverJson,
+  "dnt-policy.txt": dntPolicyTxt,
   "pki-validation": pkiValidation,
   "posh": posh,
   "openpgpkey": openpgpkeyPolicy,
