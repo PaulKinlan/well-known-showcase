@@ -4,7 +4,7 @@ An archive of **every known RFC 8615 `/.well-known/` URI** — what each one is,
 addresses, how it works — with the twist that **this server actually serves most of them live**.
 Point `curl` at any endpoint and you get the real thing.
 
-Live at **https://well-known-showcase.paulkinlan-ea.deno.dev** (Deno Deploy).
+Live at **https://well-known-showcase.paulkinlan-ea.deno.net** (Deno Deploy).
 
 ## What's here
 
