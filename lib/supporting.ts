@@ -69,15 +69,6 @@ export function serveSupporting(pathname: string, origin: string): Response | nu
         },
       });
     }
-    case "/account/password": {
-      return new Response(
-        `<!doctype html><html><head><title>Change password — demo</title><link rel="stylesheet" href="/public/styles.css"></head><body>
-        <main class="hero"><h1>Change password</h1>
-        <p class="lede">You arrived here via <code>/.well-known/change-password</code> — the W3C-specified URL that browsers and password managers navigate to. A real site would put its password-change form here.</p>
-        <p><a href="/">← Back to the archive</a></p></main></body></html>`,
-        { headers: { "content-type": "text/html; charset=utf-8" } },
-      );
-    }
     case "/demo/profile.json": {
       return jsonResponse({
         "@context": "https://www.w3.org/ns/activitystreams",

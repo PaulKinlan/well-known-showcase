@@ -29,7 +29,7 @@ export const CATEGORIES: Record<string, { label: string; blurb: string }> = {
   },
   agents: {
     label: "AI, Agents & Automation",
-    blurb: "The newest wave — machine-readable policy and agent discovery.",
+    blurb: "Agent cards, llms.txt and policy files — the newest machine-facing URIs.",
   },
   deprecated: {
     label: "Deprecated & Historical",
@@ -1394,7 +1394,7 @@ export const SPECS: Spec[] = [
     ],
     demoKind: "live",
     demoLabel: "Working DoH relay — resolves real DNS through this server",
-    demoPath: "/.well-known/dns-query?dns=AAABAAABAAAAAAAAB2V4YW1wbGUDY29tAAABAAE=",
+    demoPath: "/.well-known/dns-query?dns=EjQBAAABAAAAAAAAB2V4YW1wbGUDY29tAAABAAE",
   },
   {
     slug: "hosting-provider",
@@ -1501,6 +1501,56 @@ export const SPECS: Spec[] = [
     how: ["The site serves the URL of the EFF policy it adopts."],
     demoKind: "demo",
     demoLabel: "Demo policy text — this site does not claim to honor DNT",
+  },
+  {
+    slug: "manifest-webmanifest",
+    name: "manifest.webmanifest (Isolated Web Apps)",
+    uri: "/.well-known/manifest.webmanifest",
+    standard: "Isolated Web Apps (Chrome / WICG)",
+    standardUrl: "https://github.com/WICG/isolated-web-apps",
+    registrar: "defacto",
+    category: "platform",
+    summary: "The fixed manifest location Isolated Web Apps must use — no HTML link tag needed.",
+    what:
+      'Normal PWAs are discovered by parsing HTML for a <link rel="manifest"> tag. Isolated Web Apps (IWAs) cannot rely on that: they run in a high-trust isolated-app:// context packaged in a Signed Web Bundle, and the browser must inspect app metadata (name, version, permissions) before executing any content. So the manifest must live at the deterministic path /.well-known/manifest.webmanifest, where the browser looks without needing HTML.',
+    threat:
+      "If metadata discovery depended on HTML, an IWA could only be evaluated after executing untrusted content, defeating the isolation model. A fixed, well-known path keeps install-time validation deterministic and makes updates checkable (the manifest carries a SemVer version and an update_manifest_url).",
+    how: [
+      "The IWA manifest is served at /.well-known/manifest.webmanifest as application/manifest+json.",
+      "It extends the W3C Web App Manifest with IWA-specific fields: version (SemVer, required), update_manifest_url, and permissions_policy for powerful APIs.",
+      'The browser fetches this path directly — a <link rel="manifest"> tag is neither required nor used for IWA install discovery.',
+    ],
+    notes: [
+      "Demo: format-valid IWA-style manifest. No Signed Web Bundle exists for this host, so nothing here is installable as an IWA.",
+    ],
+    demoKind: "demo",
+    demoLabel: "Format demo — IWA manifest shape; this host is not an installable IWA",
+  },
+  {
+    slug: "web-app-origin-association",
+    name: "web-app-origin-association (scope extensions)",
+    uri: "/.well-known/web-app-origin-association",
+    standard: "Web App Scope Extensions (WICG / Chrome)",
+    standardUrl:
+      "https://github.com/WICG/manifest-incubations/blob/gh-pages/scope_extensions-explainer.md",
+    registrar: "defacto",
+    category: "platform",
+    summary:
+      "The validation file a target origin hosts to grant a PWA extended scope across its domain.",
+    what:
+      "Scope extensions let an installed PWA claim pages on other origins (e.g. support.example.com) as part of its app. Because that is a dangerous power, it requires a two-way handshake: the PWA lists the origins in its manifest's scope_extensions, and each target origin must host a JSON file at /.well-known/web-app-origin-association granting that specific manifest id a scope.",
+    threat:
+      "Without the handshake, any site could claim ownership of another domain's pages by simply naming them in a manifest. The well-known file is the target origin's explicit opt-in: browsers only extend scope for ids that appear there, scoped to the path the file allows.",
+    how: [
+      "The main PWA declares scope_extensions in its manifest, naming each origin it wants to include.",
+      "Each target origin serves /.well-known/web-app-origin-association (no .json extension, 200 OK, no redirects) mapping the PWA's manifest id to an allowed scope.",
+      "On install, the browser fetches each validation file; missing files, 404s, or absent ids reject that extension.",
+    ],
+    notes: [
+      "Demo: illustrative association file keyed by this host's manifest id. No PWA actually extends into this origin.",
+    ],
+    demoKind: "demo",
+    demoLabel: "Format demo — the two-way handshake a PWA needs before it can claim this origin",
   },
 ];
 

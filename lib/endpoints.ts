@@ -793,6 +793,38 @@ const dntPolicyTxt: Handler = () =>
     "text/plain; charset=utf-8",
   );
 
+const manifestWebmanifest: Handler = (_req, { origin, host }) => {
+  const manifest = {
+    name: "well-known-showcase (IWA format demo)",
+    short_name: "wk-showcase",
+    id: `${origin}/`,
+    start_url: "/",
+    scope: "/",
+    display: "standalone",
+    version: "0.1.0",
+    update_manifest_url: `${origin}/demo/iwa/update-manifest.json`,
+    permissions_policy: {},
+    icons: [],
+    _demo_note:
+      `Illustrative Isolated Web App manifest for ${host}. Real IWAs ship this inside a signed web bundle and must include a SemVer version and update_manifest_url; nothing on this host is installable as an IWA.`,
+  };
+  return new Response(JSON.stringify(manifest, null, 2), {
+    headers: {
+      "content-type": "application/manifest+json; charset=utf-8",
+      "cache-control": "no-store",
+    },
+  });
+};
+
+const webAppOriginAssociation: Handler = (_req, { origin, host }) =>
+  json({
+    [`${origin}/`]: {
+      scope: "/",
+    },
+    _demo_note:
+      `Illustrative scope-extension association file for ${host}. A PWA whose manifest id matches the key would be granted this origin's scope; no real PWA extends into this host.`,
+  });
+
 const pkiValidation: Handler = (req, _ctx) => {
   const url = new URL(req.url);
   const file = url.pathname.split("/").pop() ?? "";
@@ -909,6 +941,8 @@ export const ENDPOINTS: Record<string, Handler> = {
   "scitt-keys": scittKeys,
   "webweaver.json": webweaverJson,
   "dnt-policy.txt": dntPolicyTxt,
+  "manifest.webmanifest": manifestWebmanifest,
+  "web-app-origin-association": webAppOriginAssociation,
   "pki-validation": pkiValidation,
   "posh": posh,
   "openpgpkey": openpgpkeyPolicy,

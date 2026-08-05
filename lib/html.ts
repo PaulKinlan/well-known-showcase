@@ -12,6 +12,7 @@ import type { Spec } from "./types.ts";
 import { type EndpointCtx, serveWellKnown } from "./endpoints.ts";
 import { serveSupporting } from "./supporting.ts";
 import type { DemoKeys } from "./keys.ts";
+import { EXPLAIN, WILD } from "./enrich.ts";
 
 const esc = (value: string): string => value.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
@@ -240,7 +241,11 @@ async function demoPanel(spec: Spec, origin: string, keys: DemoKeys): Promise<st
   }
   if (!res) res = new Response("404 — no endpoint at this path", { status: 404 });
 
-  const textBody = await res.text();
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  const isDns = (res.headers.get("content-type") ?? "").includes("dns-message");
+  const textBody = isDns
+    ? `(binary DNS message, ${bytes.length} bytes)\nbase64: ${b64(bytes)}`
+    : new TextDecoder().decode(bytes);
   const fetched = {
     status: res.status,
     contentType: res.headers.get("content-type") ?? "",
@@ -274,6 +279,12 @@ function prettyJson(body: string): string {
   } catch {
     return body;
   }
+}
+
+function b64(bytes: Uint8Array): string {
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin);
 }
 
 export async function renderSpec(spec: Spec, origin: string, keys: DemoKeys): Promise<string> {
@@ -315,6 +326,7 @@ export async function renderSpec(spec: Spec, origin: string, keys: DemoKeys): Pr
       </section>`
         : ""
     }
+      ${wildSection(spec)}
       <section>
         <h2>Try it</h2>
         ${demo}
@@ -353,6 +365,9 @@ export function renderRegistryEntry(suffix: string, _origin: string): string {
     DEFACTO.find((e) => e.suffix === suffix);
   if (!entry) return renderNotFound(suffix);
   const deep = entry.deepDive ? SPECS.find((s) => s.slug === entry.deepDive) : undefined;
+  const explain = EXPLAIN[entry.suffix] ?? entry.summary;
+  const wild = WILD[entry.suffix];
+  const registryUrl = "https://www.iana.org/assignments/well-known-uris/well-known-uris.xhtml";
   return shell(
     `${entry.suffix} — registry entry`,
     `
@@ -372,24 +387,69 @@ export function renderRegistryEntry(suffix: string, _origin: string): string {
       esc(entry.registered)
     }</p>
         <p class="spec-summary">${esc(entry.summary)}</p>
-        ${
-      deep
-        ? `<p class="spec-standard"><a href="/specs/${deep.slug}">→ Full explainer + live demo for this URI</a></p>`
+      </header>
+      <section>
+        <h2>What it is</h2>
+        <p>${esc(explain)}</p>
+      </section>
+      <section>
+        <h2>Registration</h2>
+        <ul>
+          <li>Status in the IANA Well-Known URIs registry: <strong>${
+      esc(entry.status)
+    }</strong> (RFC 8615).</li>
+          <li>Change controller: ${esc(entry.org)}.</li>
+          <li>Registered: ${esc(entry.registered)}.</li>
+          <li><a href="${registryUrl}" rel="noopener">Full IANA registry</a></li>
+        </ul>
+      </section>
+      ${
+      wild
+        ? `<section>
+        <h2>In the wild</h2>
+        <ul class="wild-list">${
+          wild.map((w) =>
+            `<li><a href="${esc(w.url)}" rel="noopener">${esc(w.label)}</a> <code>${
+              esc(shorten(w.url))
+            }</code></li>`
+          ).join("\n")
+        }</ul>
+        <p class="fineprint">Links verified to serve this URI on 2026-08-05; some point at the governing spec where no live deployment could be verified.</p>
+      </section>`
         : ""
     }
-      </header>
       ${
       deep
-        ? demoPanelSyncNote()
-        : `<section><p>This URI is registered in the IANA Well-Known URIs registry (RFC 8615) but is not served on this host.</p></section>`
+        ? `<section><h2>Deep dive</h2><p>This URI has a full explainer with a live demo panel: <a href="/specs/${deep.slug}">${
+          esc(deep.name)
+        }</a>.</p></section>`
+        : `<section><p>This URI is registered but is not served on this host — see the specification link above for how real deployments use it.</p></section>`
     }
     </article>
   `,
   );
 }
 
-function demoPanelSyncNote(): string {
-  return `<p class="fineprint">See the linked explainer page for the live demo panel.</p>`;
+function shorten(url: string): string {
+  return url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+}
+
+function wildSection(spec: Spec): string {
+  const uri = typeof spec.uri === "string" ? spec.uri : spec.uri[0];
+  const suffix = uri.replace(/^\/\.well-known\//, "").split("/")[0];
+  const wild = WILD[suffix];
+  if (!wild) return "";
+  return `<section>
+    <h2>In the wild</h2>
+    <ul class="wild-list">${
+    wild.map((w) =>
+      `<li><a href="${esc(w.url)}" rel="noopener">${esc(w.label)}</a> <code>${
+        esc(shorten(w.url))
+      }</code></li>`
+    ).join("\n")
+  }</ul>
+    <p class="fineprint">Links verified to serve this URI on 2026-08-05; some point at the governing spec where no live deployment could be verified.</p>
+  </section>`;
 }
 
 // ------------------------------------------------------------------- 404

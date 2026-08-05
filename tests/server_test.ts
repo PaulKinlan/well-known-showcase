@@ -255,6 +255,13 @@ Deno.test("demo endpoints are labelled and 404 unknown paths honestly", async ()
         `spec page ${s.slug} panel must dispatch in-process (no 508/loop)`,
       );
     }
+
+    // dns-query panel must render the DNS message as base64 (binary-safe)
+    const dnsPage = await (await fetch(`${BASE}/specs/dns-query`)).text();
+    assert(
+      dnsPage.includes("binary DNS message"),
+      "dns-query panel should base64-render the response",
+    );
   } finally {
     child.kill();
     await child.status;
@@ -325,6 +332,17 @@ Deno.test("upgraded reference specs serve format-valid demo endpoints", async ()
         type: /text\/plain/,
         check: (b) => b.includes("Demo DNT policy"),
       },
+      {
+        path: "/.well-known/manifest.webmanifest",
+        type: /manifest\+json/,
+        check: (b) =>
+          b.includes('"version"') && b.includes("update_manifest_url") && b.includes("_demo_note"),
+      },
+      {
+        path: "/.well-known/web-app-origin-association",
+        type: /json/,
+        check: (b) => b.includes('"scope"') && b.includes("_demo_note"),
+      },
     ];
     for (const c of cases) {
       const res = await fetch(`${BASE}${c.path}`);
@@ -336,6 +354,79 @@ Deno.test("upgraded reference specs serve format-valid demo endpoints", async ()
         `${c.path} body should be format-valid and honest: ${body.slice(0, 120)}`,
       );
     }
+  } finally {
+    child.kill();
+    await child.status;
+  }
+});
+
+Deno.test("change-password demo flow works end to end", async () => {
+  const child = await startServer();
+  try {
+    // Hermetic start: the demo account may carry state from earlier runs
+    // (local KV is a persistent file in tests).
+    await fetch(`${BASE}/account/password?reset=1`, { method: "POST" });
+
+    // /.well-known/change-password still redirects to the demo page
+    const cp = await fetch(`${BASE}/.well-known/change-password`, { redirect: "manual" });
+    assertEquals(cp.status, 302);
+    assertEquals(cp.headers.get("location"), "/account/password");
+
+    // The demo page is served with the initial-password hint
+    const page = await fetch(`${BASE}/account/password`);
+    assertEquals(page.status, 200);
+    const html = await page.text();
+    assert(html.includes("demo-pass"), "page should state the initial demo password");
+
+    // Wrong current password is rejected honestly
+    const bad = await fetch(`${BASE}/account/password`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: "current=wrong&next=supersecret&confirm=supersecret",
+    });
+    assertEquals(bad.status, 200);
+    assert(
+      (await bad.text()).includes("doesn&#39;t match"),
+      "wrong current password must be rejected",
+    );
+
+    // Correct flow: change, verify success, then verify the new password is accepted
+    const good = await fetch(`${BASE}/account/password`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: "current=demo-pass&next=supersecret&confirm=supersecret",
+      redirect: "manual",
+    });
+    assertEquals(good.status, 303);
+    assertEquals(good.headers.get("location"), "/account/password?changed=ok");
+    const changedPage = await fetch(`${BASE}/account/password?changed=ok`);
+    assert((await changedPage.text()).includes("Password changed"));
+
+    // Old password now fails, new one works
+    const old = await fetch(`${BASE}/account/password`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: "current=demo-pass&next=whatever123&confirm=whatever123",
+    });
+    assert(
+      (await old.text()).includes("doesn&#39;t match"),
+      "old password must be rejected after change",
+    );
+    const again = await fetch(`${BASE}/account/password`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: "current=supersecret&next=whatever123&confirm=whatever123",
+      redirect: "manual",
+    });
+    assertEquals(again.status, 303);
+
+    // Reset returns the demo to its initial state
+    const reset = await fetch(`${BASE}/account/password?reset=1`, {
+      method: "POST",
+      redirect: "manual",
+    });
+    assertEquals(reset.status, 303);
+    assert(reset.headers.get("location")?.includes("reset=ok"));
   } finally {
     child.kill();
     await child.status;
