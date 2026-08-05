@@ -54,11 +54,10 @@ suite pulls `@std/assert`).
 ## Deploy
 
 Production deploys via the GitHub Actions pipeline on pushes to `main`
-(`.github/workflows/deploy.yml` — runs `deno deploy` CLI with the `DENO_DEPLOY_TOKEN` repo
-secret). App `well-known-showcase`, org `paulkinlan-ea`. The org token has no linked
-GitHub identity, so the OIDC-only `denoland/deployctl@v1` action can't authenticate and Deno's
-native GitHub integration isn't attached — if Paul attaches it later, disable the Actions workflow
-to avoid shadowing.
+(`.github/workflows/deploy.yml` — runs `deno deploy` CLI with the `DENO_DEPLOY_TOKEN` repo secret).
+App `well-known-showcase`, org `paulkinlan-ea`. The org token has no linked GitHub identity, so the
+OIDC-only `denoland/deployctl@v1` action can't authenticate and Deno's native GitHub integration
+isn't attached — if Paul attaches it later, disable the Actions workflow to avoid shadowing.
 
 ## Architecture
 

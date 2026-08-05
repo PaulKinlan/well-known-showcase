@@ -57,7 +57,7 @@ behind it.
 
 Push-to-`main` deploys via `.github/workflows/deploy.yml`, which runs the `deno deploy` CLI
 (`--org=paulkinlan-ea --app=well-known-showcase --prod`) with the `DENO_DEPLOY_TOKEN` repo secret.
-The org token has no linked GitHub identity, so the native GitHub integration isn't attached and
-the OIDC-only `denoland/deployctl@v1` action can't authenticate; if Paul attaches the repo in the
-console, disable the Actions workflow to avoid two deploy mechanisms shadowing each other. Don't
-mix ad-hoc `deno deploy` CLI deploys into production from here (CI owns the app).
+The org token has no linked GitHub identity, so the native GitHub integration isn't attached and the
+OIDC-only `denoland/deployctl@v1` action can't authenticate; if Paul attaches the repo in the
+console, disable the Actions workflow to avoid two deploy mechanisms shadowing each other. Don't mix
+ad-hoc `deno deploy` CLI deploys into production from here (CI owns the app).
