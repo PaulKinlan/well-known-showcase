@@ -241,6 +241,20 @@ Deno.test("demo endpoints are labelled and 404 unknown paths honestly", async ()
         `spec page ${s.slug} should have threat section`,
       );
     }
+
+    // every demo/live spec page's panel must render a REAL response — the
+    // in-process dispatch must never produce Deno's 508 loop error (regression
+    // for the edge self-fetch bug) or a failed-dispatch message.
+    for (const s of SPECS) {
+      if (s.demoKind === "reference") continue;
+      const r = await fetch(`${BASE}/specs/${s.slug}`);
+      const html = await r.text();
+      assert(
+        !html.includes("Loop Detected") && !html.includes("508") &&
+          !html.includes("dispatch failed"),
+        `spec page ${s.slug} panel must dispatch in-process (no 508/loop)`,
+      );
+    }
   } finally {
     child.kill();
     await child.status;

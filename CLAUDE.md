@@ -13,7 +13,7 @@ This is a Deno Deploy server that is simultaneously:
 | `lib/registry.ts`      | The 61 deep-dive specs. Each has: slug, uri(s), standard + URL, registrar + IANA status, category, summary, what, threat, how (bullets), notes (honesty), demoKind (`live`/`demo`/`reference`), demoPath/demoFetch for the demo panel. |
 | `lib/iana.ts`          | The full IANA Well-Known URIs registry (101 entries, fetched 2026-08-05) + de-facto URIs. One row per suffix: standard, status, controller, date, one-line summary, optional deepDive slug.                                            |
 | `lib/endpoints.ts`     | 45 handlers registered in `ENDPOINTS`, keyed by the IANA suffix (longest-match dispatch, so `matrix/client` wins over `matrix`). `serveWellKnown()` dispatches.                                                                        |
-| `lib/html.ts`          | Server-rendered HTML. The demo panel on each explainer page **self-fetches the real endpoint** through the real routing layer and pretty-prints it.                                                                                    |
+| `lib/html.ts`          | Server-rendered HTML. The demo panel on each explainer page **dispatches the real endpoint in-process** through the real routing layer (no network self-fetch — Deno's edge 508s that) and pretty-prints it.                           |
 | `lib/keys.ts`          | One Ed25519 keypair at boot; `signJwt()` for the did-configuration JWT.                                                                                                                                                                |
 | `public/styles.css`    | Single stylesheet, light + dark, warm off-white + indigo.                                                                                                                                                                              |
 | `tests/server_test.ts` | Spawns a real server, asserts statuses, content types, honesty invariants.                                                                                                                                                             |
@@ -42,8 +42,10 @@ behind it.
   point of the format.
 - **dns-query** relays to `https://cloudflare-dns.com/dns-query`. If upstream changes or the relay
   is abused, gate it behind an allowlist or drop it (it's one handler).
-- **Self-fetch in demo panels** hits the real routing layer. On Deno Deploy this is a normal
-  same-origin request; keep `cache-control: no-store` on endpoints so panels show fresh data.
+- **Demo panels dispatch in-process** through the real routing layer (`serveWellKnown`/
+  `serveSupporting` with a synthetic Request). A network self-fetch to the deployment's own domain
+  returns 508 LOOP_DETECTED on Deno Deploy's edge, so the panels never `fetch()` themselves. Keep
+  `cache-control: no-store` on endpoints for direct client queries.
 - **The IANA registry drifts.** When entries are added/deprecated, update `lib/iana.ts` and
   re-record the fetch date in the file header and in `README.md`.
 
@@ -55,9 +57,9 @@ behind it.
 
 ## Deploy
 
-Push-to-`main` deploys via `.github/workflows/deploy.yml`, which runs the `deno deploy` CLI
-(`--org=paulkinlan-ea --app=well-known-showcase --prod`) with the `DENO_DEPLOY_TOKEN` repo secret.
-The org token has no linked GitHub identity, so the native GitHub integration isn't attached and the
-OIDC-only `denoland/deployctl@v1` action can't authenticate; if Paul attaches the repo in the
-console, disable the Actions workflow to avoid two deploy mechanisms shadowing each other. Don't mix
-ad-hoc `deno deploy` CLI deploys into production from here (CI owns the app).
+Push-to-`main` deploys via Deno's native GitHub integration (attached by Paul 2026-08-05), which
+replaces the earlier Actions pipeline — that workflow is disabled
+(`.github/workflows/deploy.yml.disabled`) so two deploy mechanisms don't shadow each other. If the
+integration is ever detached, re-enable the workflow: it runs the `deno deploy` CLI with the
+`DENO_DEPLOY_TOKEN` repo secret (org `paulkinlan-ea`, app `well-known-showcase`). Don't mix ad-hoc
+`deno deploy` CLI deploys into production from here (the integration owns the app).

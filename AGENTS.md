@@ -38,12 +38,9 @@
 
 ## Deploy
 
-Production deploys happen on pushes to `main` via the GitHub Actions pipeline
-(`.github/workflows/deploy.yml`), which runs the `deno deploy` CLI with the org token from the
-`DENO_DEPLOY_TOKEN` repo secret (org `paulkinlan-ea`, app `well-known-showcase`).
-
-The org token has no linked GitHub identity, so Deno's native "GitHub integration" cannot be
-attached from the CLI and the OIDC-only `denoland/deployctl@v1` action cannot authenticate here. If
-Paul attaches the repo in the Deploy console later, disable the Actions workflow — two deploy
-mechanisms on one app shadow each other (last deploy wins). Never `deno deploy` CLI against
-production from here (bootstrap deploys are one-off; CI owns the app).
+Production deploys happen on pushes to `main` via Deno's native GitHub integration (attached by Paul
+2026-08-05). The earlier Actions pipeline is disabled (`.github/workflows/deploy.yml.disabled`) so
+two deploy mechanisms don't shadow each other (last deploy wins). If the integration is ever
+detached, re-enable the workflow — it runs the `deno deploy` CLI with the `DENO_DEPLOY_TOKEN` repo
+secret (org `paulkinlan-ea`, app `well-known-showcase`). Never `deno deploy` CLI against production
+from here (bootstrap deploys are one-off; CI owns the app).

@@ -1,13 +1,17 @@
 /**
  * Server-rendered HTML for the archive: page shell, index, deep-dive explainer
  * pages and auto-generated reference pages. No client-side framework — the
- * live-demo panels are rendered server-side by self-fetching the actual
- * /.well-known endpoints, so what you see is the real response.
+ * live-demo panels are rendered server-side by dispatching the actual
+ * /.well-known endpoints in-process (Deno Deploy's edge 508s a deployment that
+ * fetches its own domain, so the panels must not self-fetch over the network).
  */
 
 import { CATEGORIES, SPECS } from "./registry.ts";
 import { DEFACTO, IANA } from "./iana.ts";
 import type { Spec } from "./types.ts";
+import { type EndpointCtx, serveWellKnown } from "./endpoints.ts";
+import { serveSupporting } from "./supporting.ts";
+import type { DemoKeys } from "./keys.ts";
 
 const esc = (value: string): string => value.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
@@ -196,7 +200,15 @@ export function renderIndex(origin: string): string {
 
 // ---------------------------------------------------------------- spec page
 
-async function demoPanel(spec: Spec, origin: string): Promise<string> {
+/**
+ * Demo panel for one spec. Dispatches through the REAL routing layer
+ * (serveWellKnown / serveSupporting) but IN-PROCESS, with a synthetic Request
+ * instead of a network fetch — Deno Deploy's edge returns 508 LOOP_DETECTED
+ * when a deployment fetches its own domain, so a server-side self-fetch can
+ * never work there. In-process dispatch is the same code path a real request
+ * takes, without the network hop.
+ */
+async function demoPanel(spec: Spec, origin: string, keys: DemoKeys): Promise<string> {
   if (spec.demoKind === "reference") {
     return `<div class="panel panel-ref"><p>Reference only — no endpoint is served for this spec on this host.</p></div>`;
   }
@@ -206,25 +218,34 @@ async function demoPanel(spec: Spec, origin: string): Promise<string> {
   const fetchOpts = spec.demoFetch ?? {};
   const label = spec.demoLabel ?? LABELS[spec.demoKind].text;
 
-  let fetched: { status: number; contentType: string; body: string };
+  const target = new URL(path, origin);
+  const ctx: EndpointCtx = { origin, host: target.host, keys, specs: SPECS };
+  const req = new Request(target, {
+    method: fetchOpts.method ?? "GET",
+    headers: {
+      accept: "application/json, text/plain, application/xml, text/xml, text/turtle, */*",
+      ...(fetchOpts.headers ?? {}),
+    },
+    body: fetchOpts.body,
+  });
+
+  let res: Response | null = null;
   try {
-    const res = await fetch(new URL(path, origin), {
-      method: fetchOpts.method ?? "GET",
-      headers: {
-        accept: "application/json, text/plain, application/xml, text/xml, text/turtle, */*",
-        ...(fetchOpts.headers ?? {}),
-      },
-      body: fetchOpts.body,
-    });
-    const textBody = await res.text();
-    fetched = {
-      status: res.status,
-      contentType: res.headers.get("content-type") ?? "",
-      body: textBody.length > 6000 ? textBody.slice(0, 6000) + "\n… (truncated)" : textBody,
-    };
+    if (target.pathname.startsWith("/.well-known/")) {
+      res = await serveWellKnown(target.pathname, req, ctx);
+    }
+    if (!res) res = serveSupporting(target.pathname, origin);
   } catch (err) {
-    fetched = { status: 0, contentType: "", body: `(self-fetch failed: ${esc(String(err))})` };
+    res = new Response(`(in-process dispatch failed: ${String(err)})`, { status: 500 });
   }
+  if (!res) res = new Response("404 — no endpoint at this path", { status: 404 });
+
+  const textBody = await res.text();
+  const fetched = {
+    status: res.status,
+    contentType: res.headers.get("content-type") ?? "",
+    body: textBody.length > 6000 ? textBody.slice(0, 6000) + "\n… (truncated)" : textBody,
+  };
 
   const isJson = fetched.contentType.includes("json");
   const pretty = isJson ? prettyJson(fetched.body) : fetched.body;
@@ -255,8 +276,8 @@ function prettyJson(body: string): string {
   }
 }
 
-export async function renderSpec(spec: Spec, origin: string): Promise<string> {
-  const demo = await demoPanel(spec, origin);
+export async function renderSpec(spec: Spec, origin: string, keys: DemoKeys): Promise<string> {
+  const demo = await demoPanel(spec, origin, keys);
   const uris = Array.isArray(spec.uri) ? spec.uri : [spec.uri];
   return shell(
     `${spec.name} — ${spec.standard}`,
