@@ -1,0 +1,29 @@
+# Deploys well-known-showcase to Deno Deploy on every push to main.
+#
+# The org access token (DENO_DEPLOY_TOKEN secret, org paulkinlan-ea) has no
+# linked GitHub identity, so the native "GitHub integration" can't be attached
+# from here — this Actions pipeline is the push-to-main deploy path. If Paul
+# attaches the repo in the Deploy console later, disable this workflow to avoid
+# two deploy mechanisms shadowing each other.
+
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Deno Deploy
+        uses: denoland/deploy-action@v2
+        with:
+          project: well-known-showcase
+          entrypoint: server.ts
+          deploy_token: ${{ secrets.DENO_DEPLOY_TOKEN }}

@@ -53,8 +53,12 @@ Requires Deno 2.x. No third-party runtime dependencies — std and Web Platform 
 
 ## Deploy
 
-Production deploys via the Deno Deploy GitHub integration on pushes to `main`
-(app `well-known-showcase`, org `paulkinlan-ea`). `deno.json` carries the deploy config.
+Production deploys via the GitHub Actions pipeline on pushes to `main`
+(`.github/workflows/deploy.yml`, `denoland/deploy-action@v2`, `DENO_DEPLOY_TOKEN`
+repo secret). App `well-known-showcase`, org `paulkinlan-ea`, entrypoint `server.ts`.
+The org token has no linked GitHub identity, so Deno's native GitHub integration
+isn't attached — if Paul attaches it later, disable the Actions workflow to avoid
+shadowing.
 
 ## Architecture
 

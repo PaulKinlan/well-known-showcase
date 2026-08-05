@@ -17,10 +17,10 @@
   },
   "deploy": {
     "org": "paulkinlan-ea",
-    "app": "well-known-showcase",
-    "runtime": {
-      "type": "dynamic",
-      "entrypoint": "server.ts"
-    }
+    "app": "well-known-showcase"
   }
 }
+
+
+
+

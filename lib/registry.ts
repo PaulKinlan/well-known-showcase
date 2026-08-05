@@ -87,6 +87,7 @@ export const SPECS: Spec[] = [
     ],
     notes: [
       "Demo: a real CA would place a live token here during issuance. This server answers any token with a sample key authorization so the mechanism is visible.",
+      "On the deployed host, Deno Deploy's platform firewall returns 403 for /.well-known/acme-challenge/* — the edge blocks CA-validation paths to prevent domain-hijacking attacks. That 403 is itself the real-world behavior; the endpoint works fully on a self-hosted server.",
     ],
     demoKind: "demo",
     demoLabel: "Format demonstration — a real CA places a live token during issuance",
@@ -165,6 +166,7 @@ export const SPECS: Spec[] = [
     ],
     notes: [
       "Demo: real issuance uses CA-generated random values. This server answers any filename with a sample value so the mechanism is visible.",
+      "On the deployed host, Deno Deploy's platform firewall returns 403 for /.well-known/pki-validation/* — same edge block as acme-challenge. See the acme-challenge entry for the same real-world note.",
     ],
     demoKind: "demo",
     demoLabel: "Format demonstration — real issuance uses CA-generated random values",

@@ -55,6 +55,9 @@ infrastructure behind it.
 
 ## Deploy
 
-GitHub integration on pushes to `main` (org `paulkinlan-ea`, app `well-known-showcase`).
-`deno.json` `deploy` block configures entrypoint `server.ts`. Do not mix `deno deploy`
-CLI deploys with the integration — a CLI deploy shadows the integration deploy.
+Push-to-`main` deploys via `.github/workflows/deploy.yml` (denoland/deploy-action,
+`DENO_DEPLOY_TOKEN` repo secret, org `paulkinlan-ea`, app `well-known-showcase`,
+entrypoint `server.ts`). The org token has no linked GitHub identity, so the native
+GitHub integration isn't attached; if Paul attaches it in the console, disable the
+Actions workflow to avoid two deploy mechanisms shadowing each other. Don't mix
+`deno deploy` CLI deploys into production from here.

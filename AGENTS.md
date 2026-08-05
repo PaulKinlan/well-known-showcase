@@ -39,6 +39,12 @@ that look for `AGENTS.md`.
 
 ## Deploy
 
-Deploys happen on pushes to `main` via the Deno Deploy GitHub integration (org
-`paulkinlan-ea`, app `well-known-showcase`). Never `deno deploy` CLI against production
-from here — a CLI deploy shadows the integration deploy.
+Production deploys happen on pushes to `main` via the GitHub Actions pipeline
+(`.github/workflows/deploy.yml`, `denoland/deploy-action@v2`), which uploads with the
+org token from the `DENO_DEPLOY_TOKEN` repo secret (org `paulkinlan-ea`, app
+`well-known-showcase`, entrypoint `server.ts`).
+
+The org token has no linked GitHub identity, so Deno's native "GitHub integration"
+cannot be attached from the CLI. If Paul attaches the repo in the Deploy console
+later, disable the Actions workflow — two deploy mechanisms on one app shadow each
+other (last deploy wins). Never `deno deploy` CLI against production from here.
