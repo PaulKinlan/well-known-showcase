@@ -126,32 +126,32 @@ export function renderIndex(origin: string): string {
     `
     <section class="hero">
       <h1>Every <code>/.well-known/</code> URI, explained and served live</h1>
-      <p class="lede">RFC 8615 gives the web a convention: anything a site wants the world to find — security contacts, identity endpoints, policy files, agent cards — lives at a predictable URL under <code>/.well-known/</code>. This site archives the specs, explains the threat each one addresses, and <em>actually serves</em> most of them so you can poke the real thing.</p>
+      <p class="lede">RFC 8615 gives the web a convention: anything a site wants the world to find lives at a predictable URL under <code>/.well-known/</code>. Security contacts, identity endpoints, policy files and agent cards each have their own path there. This site explains the spec behind each one and serves most of the endpoints for real.</p>
       <div class="hero-stats">
         <div><strong>${SPECS.length}</strong><span>deep-dive specs</span></div>
         <div><strong>${live}</strong><span>served live &amp; spec-accurate</span></div>
         <div><strong>${demo}</strong><span>served as format demos</span></div>
         <div><strong>${IANA.length}</strong><span>IANA-registered URIs catalogued</span></div>
       </div>
-      <p class="tryit">Try it: <code>curl ${origin}/.well-known/security.txt</code> — it's a real file. So is <code>${origin}/.well-known/jwks.json</code> (a real Ed25519 key) and <code>${origin}/.well-known/webfinger?resource=acct:demo@${
+      <p class="tryit">Try it: <code>curl ${origin}/.well-known/security.txt</code> returns a real file. So does <code>${origin}/.well-known/jwks.json</code>, which holds a real Ed25519 key, and <code>${origin}/.well-known/webfinger?resource=acct:demo@${
       new URL(origin).host
     }</code>.</p>
     </section>
     <section>
-      <h2>The honesty rule</h2>
-      <p>Every endpoint carries one of three labels:</p>
+      <h2>The three labels</h2>
+      <p>Every endpoint on this site carries one of three labels.</p>
       <ul class="honesty">
         <li>${
       badge("live")
-    } — the response is <strong>spec-accurate for real</strong>: a genuine security.txt, a genuine signed JWT, a genuine NodeInfo document.</li>
+    } The response is genuinely spec-accurate: a real security.txt, a real signed JWT, a real NodeInfo document.</li>
         <li>${
       badge("demo")
-    } — the response is <strong>format-valid but illustrative</strong>: right shape, right content types, placeholder values that are labelled as such (no fake accounts, keys or services are implied).</li>
+    } Format-valid with illustrative values: right shape, right content types, placeholders labelled as such. No fake accounts, keys or services are implied.</li>
         <li>${
       badge("reference")
-    } — the spec is <strong>documented but not served</strong> (it would need real infrastructure we don't run).</li>
+    } Documented but not served; serving it would need real infrastructure this host doesn't run.</li>
       </ul>
-      <p class="fineprint">A demo is never presented as a live service. Where an endpoint needs real infrastructure (a CA, a mail server, a Lightning node, a homeserver), the response says so in-band.</p>
+      <p class="fineprint">A demo is never presented as a live service. Where an endpoint needs real infrastructure, the response says so in-band.</p>
     </section>
     ${categorySections}
     <section class="category">
@@ -179,7 +179,7 @@ export function renderIndex(origin: string): string {
     </section>
     <section class="category">
       <h2 id="defacto">The de-facto well-known URIs</h2>
-      <p class="category-blurb">Widely deployed, standardized elsewhere — but not in the IANA registry. Apple, Microsoft, OpenID, Solid, Nostr, LNURL and AARC all live here.</p>
+      <p class="category-blurb">Widely deployed but standardized outside the IANA registry. Apple, Microsoft, OpenID, Solid, Nostr, LNURL and AARC all publish here.</p>
       <div class="card-grid">
         ${
       DEFACTO.map((e) => {
@@ -342,7 +342,7 @@ export function renderSpecsIndex(): string {
     "Explorers",
     `
     <h1>All deep-dive explainers</h1>
-    <p class="lede">${SPECS.length} specs, grouped by the problem space they live in. Every page explains what the spec is, the threat it addresses, how it works — and where possible serves the real endpoint.</p>
+    <p class="lede">${SPECS.length} specs, grouped by the problem space they live in. Every page explains what the spec is, the threat it addresses, how it works, and serves the real endpoint where possible.</p>
     <div class="index-list">
       ${
       SPECS.map((s) =>

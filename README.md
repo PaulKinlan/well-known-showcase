@@ -12,17 +12,17 @@ Live at **https://well-known-showcase.paulkinlan-ea.deno.net** (Deno Deploy).
   openid-configuration, jwks.json, acme-challenge, mta-sts, apple-app-site-association,
   assetlinks.json, gpc.json, change-password…) and the interesting new ones (tdmrep.json,
   agent-card.json, webauthn, oauth-protected-resource, sbom, api-catalog…).
-- **All 112 IANA-registered well-known URIs** catalogued (`/registry/<suffix>`), fetched from the
-  IANA registry on 2026-08-05 — including the ones the registry already retired
+- **All 101 IANA-registered well-known URIs (+ 16 de-facto)** catalogued (`/registry/<suffix>`),
+  fetched from the IANA registry on 2026-08-05 — including the ones the registry already retired
   (related-website-set.json, privacy-sandbox-attestations.json, tpcd).
 - **The de-facto URIs IANA misses**: jwks.json, oidc-registration, apple-app-site-association,
   autoconfig/autodiscover, dns-query, openpgpkey, lnurlp, wac, aarc.
-- **61 endpoints** served from this host, each labelled honestly:
+- **62 endpoints** served from this host, each labelled honestly:
 
 | Label         | Count | Meaning                                                                                                                                                                                                                                     |
 | ------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **live**      | 15    | Spec-accurate for real: genuine security.txt, genuine signed Ed25519 JWT (did-configuration), real JWK Set, working WebFinger, working NodeInfo, real DoH DNS relay, real GPC/TDMRep/DNT declarations, real SBOM, real Linkset API catalog. |
-| **demo**      | 46    | Format-valid responses with illustrative values, labelled as demos in-band (e.g. the LNURL callback returns an honest "no Lightning node attached" error).                                                                                  |
+| **demo**      | 44    | Format-valid responses with illustrative values, labelled as demos in-band (e.g. the LNURL callback returns an honest "no Lightning node attached" error).                                                                                  |
 | **reference** | 4     | Documented only — serving them would require real infrastructure or real auth flows we don't run (EST, HOBA, OSLC, open-resource-discovery).                                                                                                |
 
 **The honesty rule:** nothing is faked as something it isn't. A demo never claims to be a live
@@ -64,8 +64,8 @@ mechanisms don't shadow each other; re-enable it if the integration is ever deta
 ```
 server.ts            — routing: /, /specs/*, /registry/*, /.well-known/*, supporting resources
 lib/registry.ts      — 63 deep-dive specs (what / threat / how / honesty notes)
-lib/iana.ts          — the 112-entry IANA registry + de-facto URIs
-lib/endpoints.ts     — 61 endpoint handlers, each labelled live|demo
+lib/iana.ts          — the 101-entry IANA registry (+ 16 de-facto) + de-facto URIs
+lib/endpoints.ts     — 62 endpoint handlers, each labelled live|demo
 lib/html.ts          — server-rendered pages (no client framework)
 lib/keys.ts          — boot-time Ed25519 keypair + JWT signing
 public/styles.css    — single stylesheet, light + dark
